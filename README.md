@@ -14,6 +14,10 @@ npx cap sync
 <docgen-index>
 
 * [`echo(...)`](#echo)
+* [`handleSignInButton()`](#handlesigninbutton)
+* [`signOut()`](#signout)
+* [`restorePreviousSignIn()`](#restoreprevioussignin)
+* [Interfaces](#interfaces)
 
 </docgen-index>
 
@@ -33,5 +37,44 @@ echo(options: { value: string; }) => Promise<{ value: string; }>
 **Returns:** <code>Promise&lt;{ value: string; }&gt;</code>
 
 --------------------
+
+
+### handleSignInButton()
+
+```typescript
+handleSignInButton() => Promise<SignInWithGoogleResponse>
+```
+
+**Returns:** <code>Promise&lt;<a href="#signinwithgoogleresponse">SignInWithGoogleResponse</a>&gt;</code>
+
+--------------------
+
+
+### signOut()
+
+```typescript
+signOut() => Promise<void>
+```
+
+--------------------
+
+
+### restorePreviousSignIn()
+
+```typescript
+restorePreviousSignIn() => Promise<void>
+```
+
+--------------------
+
+
+### Interfaces
+
+
+#### SignInWithGoogleResponse
+
+| Prop           | Type                                                                                                                                                                           |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **`response`** | <code>{ user: string \| null; email: string \| null; givenName: string \| null; familyName: string \| null; identityToken: string; authorizationCode: string \| null; }</code> |
 
 </docgen-api>
