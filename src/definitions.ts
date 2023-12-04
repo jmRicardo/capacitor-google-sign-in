@@ -3,6 +3,8 @@ export interface GoogleSignInPlugin {
   handleSignInButton(): Promise<SignInWithGoogleResponse>;
   signOut(): Promise<void>;
   restorePreviousSignIn(): Promise<void>;
+  checkScope(options: { scope: string }): Promise<{ value: boolean }>;
+  requestScope(options: { scope: string }): Promise<{ value: boolean }>;
 }
 
 export interface SignInWithGoogleResponse {
@@ -13,5 +15,6 @@ export interface SignInWithGoogleResponse {
     familyName: string | null;
     identityToken: string;
     authorizationCode: string | null;
+    serverAuthCode: string | null;
   };
 }

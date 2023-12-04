@@ -8,4 +8,6 @@ CAP_PLUGIN(GoogleSignInPlugin, "GoogleSignIn",
            CAP_PLUGIN_METHOD(handleSignInButton, CAPPluginReturnPromise);
            CAP_PLUGIN_METHOD(signOut, CAPPluginReturnPromise);
            CAP_PLUGIN_METHOD(restorePreviousSignIn, CAPPluginReturnPromise);
+           CAP_PLUGIN_METHOD(checkScope, CAPPluginReturnPromise);
+           CAP_PLUGIN_METHOD(requestScope, CAPPluginReturnPromise);
 )

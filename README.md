@@ -17,6 +17,8 @@ npx cap sync
 * [`handleSignInButton()`](#handlesigninbutton)
 * [`signOut()`](#signout)
 * [`restorePreviousSignIn()`](#restoreprevioussignin)
+* [`checkScope(...)`](#checkscope)
+* [`requestScope(...)`](#requestscope)
 * [Interfaces](#interfaces)
 
 </docgen-index>
@@ -68,13 +70,43 @@ restorePreviousSignIn() => Promise<void>
 --------------------
 
 
+### checkScope(...)
+
+```typescript
+checkScope(options: { scope: string; }) => Promise<{ value: boolean; }>
+```
+
+| Param         | Type                            |
+| ------------- | ------------------------------- |
+| **`options`** | <code>{ scope: string; }</code> |
+
+**Returns:** <code>Promise&lt;{ value: boolean; }&gt;</code>
+
+--------------------
+
+
+### requestScope(...)
+
+```typescript
+requestScope(options: { scope: string; }) => Promise<{ value: boolean; }>
+```
+
+| Param         | Type                            |
+| ------------- | ------------------------------- |
+| **`options`** | <code>{ scope: string; }</code> |
+
+**Returns:** <code>Promise&lt;{ value: boolean; }&gt;</code>
+
+--------------------
+
+
 ### Interfaces
 
 
 #### SignInWithGoogleResponse
 
-| Prop           | Type                                                                                                                                                                           |
-| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **`response`** | <code>{ user: string \| null; email: string \| null; givenName: string \| null; familyName: string \| null; identityToken: string; authorizationCode: string \| null; }</code> |
+| Prop           | Type                                                                                                                                                                                                           |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **`response`** | <code>{ user: string \| null; email: string \| null; givenName: string \| null; familyName: string \| null; identityToken: string; authorizationCode: string \| null; serverAuthCode: string \| null; }</code> |
 
 </docgen-api>
