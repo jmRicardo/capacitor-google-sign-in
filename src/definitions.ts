@@ -18,3 +18,4 @@ export interface SignInWithGoogleResponse {
     serverAuthCode: string | null;
   };
 }
+

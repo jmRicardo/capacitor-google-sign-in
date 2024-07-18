@@ -33,6 +33,8 @@ public class GoogleSignInPlugin: CAPPlugin {
                 self.user = result.user
                 
                 let serverAuthCode = result.serverAuthCode
+                
+                print(result)
                                
                 call.resolve([
                     "response": [
