@@ -13,16 +13,12 @@ import androidx.credentials.GetCredentialRequest;
 import androidx.credentials.GetCredentialResponse;
 import androidx.credentials.exceptions.GetCredentialException;
 
-import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption;
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential;
-
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.util.concurrent.Executors;
 
@@ -31,6 +27,7 @@ public class GoogleSignInPlugin extends Plugin {
 
     private GetSignInWithGoogleOption signInWithGoogleOption;
     private CredentialManager credentialManager;
+    private final GoogleSignIn googleSignIn = new GoogleSignIn();
 
     @PluginMethod
     public void handleSignInButton(PluginCall call) {
@@ -54,20 +51,11 @@ public class GoogleSignInPlugin extends Plugin {
                     public void onResult(GetCredentialResponse result) {
                         var data = handleSignIn(result);
                         if (data!=null) {
-                            var idToken = data.getIdToken();
-                            try {
-                                var payload = new JSONObject(new String(java.util.Base64.getDecoder().decode(idToken.split("\\.")[1])));
-                                JSObject response = new JSObject();
-                                JSObject user = new JSObject();
-                                user.put("user", payload.getString("sub"));
-                                user.put("email", data.getId());
-                                user.put("givenName", data.getGivenName());
-                                user.put("familyName", data.getFamilyName());
-                                user.put("authorizationCode", data.getIdToken());
-                                response.put("response", user);
-                                call.resolve(response);
-                            } catch (JSONException e) {
-                                call.reject("Error parsing credential");
+                            var parsed = googleSignIn.parseCredentialData(data);
+                            if (parsed!=null) {
+                                call.resolve(parsed);
+                            } else {
+                                call.reject("Cannot parse credential data");
                             }
                         } else {
                             call.reject("Unexpected type of credential");
