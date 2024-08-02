@@ -10,11 +10,6 @@ import org.json.JSONObject;
 
 public class GoogleSignIn {
 
-    public String echo(String value) {
-        Log.i("Echo", value);
-        return value;
-    }
-
     public JSObject parseCredentialData(GoogleIdTokenCredential data) {
         var idToken = data.getIdToken();
         try {

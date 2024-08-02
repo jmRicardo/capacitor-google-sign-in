@@ -13,33 +13,17 @@ npx cap sync
 
 <docgen-index>
 
-* [`echo(...)`](#echo)
 * [`handleSignInButton()`](#handlesigninbutton)
 * [`signOut()`](#signout)
 * [`restorePreviousSignIn()`](#restoreprevioussignin)
-* [`checkScope(...)`](#checkscope)
-* [`requestScope(...)`](#requestscope)
+* [`checkScopes(...)`](#checkscopes)
+* [`requestScopes(...)`](#requestscopes)
 * [Interfaces](#interfaces)
 
 </docgen-index>
 
 <docgen-api>
 <!--Update the source file JSDoc comments and rerun docgen to update the docs below-->
-
-### echo(...)
-
-```typescript
-echo(options: { value: string; }) => Promise<{ value: string; }>
-```
-
-| Param         | Type                            |
-| ------------- | ------------------------------- |
-| **`options`** | <code>{ value: string; }</code> |
-
-**Returns:** <code>Promise&lt;{ value: string; }&gt;</code>
-
---------------------
-
 
 ### handleSignInButton()
 
@@ -70,30 +54,30 @@ restorePreviousSignIn() => Promise<void>
 --------------------
 
 
-### checkScope(...)
+### checkScopes(...)
 
 ```typescript
-checkScope(options: { scope: string; }) => Promise<{ value: boolean; }>
+checkScopes(options: { scopes: string[]; }) => Promise<{ value: boolean; }>
 ```
 
-| Param         | Type                            |
-| ------------- | ------------------------------- |
-| **`options`** | <code>{ scope: string; }</code> |
+| Param         | Type                               |
+| ------------- | ---------------------------------- |
+| **`options`** | <code>{ scopes: string[]; }</code> |
 
 **Returns:** <code>Promise&lt;{ value: boolean; }&gt;</code>
 
 --------------------
 
 
-### requestScope(...)
+### requestScopes(...)
 
 ```typescript
-requestScope(options: { scope: string; }) => Promise<{ value: boolean; }>
+requestScopes(options: { scopes: string[]; }) => Promise<{ value: boolean; }>
 ```
 
-| Param         | Type                            |
-| ------------- | ------------------------------- |
-| **`options`** | <code>{ scope: string; }</code> |
+| Param         | Type                               |
+| ------------- | ---------------------------------- |
+| **`options`** | <code>{ scopes: string[]; }</code> |
 
 **Returns:** <code>Promise&lt;{ value: boolean; }&gt;</code>
 

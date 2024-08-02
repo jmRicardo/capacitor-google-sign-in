@@ -1,10 +1,9 @@
 export interface GoogleSignInPlugin {
-  echo(options: { value: string }): Promise<{ value: string }>;
   handleSignInButton(): Promise<SignInWithGoogleResponse>;
   signOut(): Promise<void>;
   restorePreviousSignIn(): Promise<void>;
-  checkScope(options: { scope: string }): Promise<{ value: boolean }>;
-  requestScope(options: { scope: string }): Promise<{ value: boolean }>;
+  checkScopes(options: { scopes: string[] }): Promise<{ value: boolean }>;
+  requestScopes(options: { scopes: string[] }): Promise<{ value: boolean }>;
 }
 
 export interface SignInWithGoogleResponse {

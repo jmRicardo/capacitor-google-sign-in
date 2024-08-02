@@ -3,9 +3,6 @@ import { WebPlugin } from '@capacitor/core';
 import type {GoogleSignInPlugin, SignInWithGoogleResponse} from './definitions';
 
 export class GoogleSignInWeb extends WebPlugin implements GoogleSignInPlugin {
-  async echo(options: { value: string }): Promise<{ value: string }> {
-    return options;
-  }
 
   // @ts-ignore
   async handleSignInButton(): Promise<SignInWithGoogleResponse> {
@@ -21,12 +18,12 @@ export class GoogleSignInWeb extends WebPlugin implements GoogleSignInPlugin {
   }
 
   // @ts-ignore
-  checkScope(options: { scope: string }): Promise<{ value: boolean }> {
+  checkScopes(options: { scopes: string[] }): Promise<{ value: boolean }> {
     this.unimplemented('Not implemented on web.')
   }
 
   // @ts-ignore
-  requestScope(options: { scope: string }): Promise<{ value: boolean }> {
+  requestScopes(options: { scopes: string[] }): Promise<{ value: boolean }> {
     this.unimplemented('Not implemented on web.')
   }
 }
