@@ -1,6 +1,28 @@
 # capacitor-google-sign-in
 
-Plugin para SignUp/SignIn de Google en Android y iOS
+This plugin was created using the latest implementation available for Android and iOS.
+The idea of this plugin is to use it to obtain the user’s token, and the rest of the logic is managed by our backend.
+The plugin returns/deserializes the token to obtain the basic data, but I recommend doing this on your backend and validating it if possible.
+
+##  Prerequisites
+
+To use the plugin, you need a Google Cloud account:
+
+For both, you need to obtain an OAuth client ID.
+
+iOS Documentation: https://developers.google.com/identity/sign-in/ios/start-integrating
+
+For iOS, you need to add both GIDClientID and GIDServerClientID (optional) to the info.plist.
+
+Android Documentation: https://developer.android.com/identity/sign-in/credential-manager-siwg
+
+For Android, you need to configure the ID in the capacitor config file as follows:
+
+"GoogleSignIn": {
+"AndroidServerClientId": "MY_CLIENT_ID"
+}
+
+Because I am using the latest dependencies in the Android integration, the project needs to compile to version 35 for it to work.
 
 ## Install
 
