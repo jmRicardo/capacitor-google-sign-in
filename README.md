@@ -24,6 +24,14 @@ For Android, you need to configure the ID in the capacitor config file as follow
 
 Because I am using the latest dependencies in the Android integration, the project needs to compile to version 35 for it to work.
 
+## Extra
+
+Additionally, with this plugin, you can request permissions to access Google resources. Again, this plugin only handles obtaining the token; the rest of the logic is done on the backend. There are two methods: one to check the status and another to request it. Both methods accept an array of scopes:
+
+Example of a scope format:
+
+const scopes = ['https://www.googleapis.com/auth/calendar']
+
 ## Install
 
 ```bash
