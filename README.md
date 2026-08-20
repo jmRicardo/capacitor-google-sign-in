@@ -24,6 +24,19 @@ For Android, you need to configure the ID in the capacitor config file as follow
 
 Because I am using the latest dependencies in the Android integration, the project needs to compile to version 35 for it to work.
 
+## ProGuard / R8 (Android)
+
+Nothing to configure. The plugin ships its own `consumer-rules.pro`, so the keep
+rules it needs are merged into your app's R8 configuration automatically when
+you build with `minifyEnabled true`.
+
+They are deliberately narrow: only the Capacitor annotation types (which R8
+would otherwise drop, taking `PluginHandle.pluginAnnotation` with them and
+turning any `checkPermissions()` call into a fatal NPE) and the plugin's
+`@PluginMethod` entry points. Everything else in the plugin stays obfuscated,
+and you do not need the usual catch-all
+`-keep class * extends java.lang.annotation.Annotation` in your app.
+
 ## Extra
 
 Additionally, with this plugin, you can request permissions to access Google resources. Again, this plugin only handles obtaining the token; the rest of the logic is done on the backend. There are two methods: one to check the status and another to request it. Both methods accept an array of scopes:
