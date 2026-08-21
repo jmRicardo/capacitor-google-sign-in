@@ -22,7 +22,7 @@ For Android, you need to configure the ID in the capacitor config file as follow
 "AndroidServerClientId": "MY_CLIENT_ID"
 }
 
-Because I am using the latest dependencies in the Android integration, the project needs to compile to version 35 for it to work.
+Because I am using the latest dependencies in the Android integration, the project needs to compile to version 36 for it to work.
 
 ## ProGuard / R8 (Android)
 
