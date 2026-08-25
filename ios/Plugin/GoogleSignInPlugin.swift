@@ -31,22 +31,8 @@ public class GoogleSignInPlugin: CAPPlugin {
                 }
                 
                 self.user = result.user
-                
-                let serverAuthCode = result.serverAuthCode
-                
-                print(result)
-                               
-                call.resolve([
-                    "response": [
-                        "user": result.user.userID ?? "",
-                        "email": result.user.profile?.email ?? "",
-                        "givenName": result.user.profile?.givenName ?? "",
-                        "familyName": result.user.profile?.familyName ?? "",
-                        "identityToken": result.user.accessToken.tokenString,
-                        "authorizationCode": result.user.idToken?.tokenString ?? "",
-                        "serverAuthCode": result.serverAuthCode
-                    ]
-                ])
+
+                call.resolve(["response": GoogleSignInPlugin.serialize(result.user, serverAuthCode: result.serverAuthCode)])
             }
     }
     
@@ -67,19 +53,30 @@ public class GoogleSignInPlugin: CAPPlugin {
                     call.reject("User without data")
                     return
                 }
-                let auth = user.idToken?.tokenString
-                call.resolve([
-                    "response": [
-                        "user": user.userID ?? "",
-                        "email": user.profile?.email ?? "",
-                        "givenName": user.profile?.givenName ?? "",
-                        "familyName": user.profile?.familyName ?? "",
-                        "identityToken": user.accessToken.tokenString,
-                        "authorizationCode": user.idToken?.tokenString ?? ""
-                    ]
-                ])
+
+                // A restored session has no serverAuthCode: that code is one-time and is only
+                // issued by an interactive sign-in.
+                call.resolve(["response": GoogleSignInPlugin.serialize(user, serverAuthCode: nil)])
             }
         }
+    }
+
+    /// Single shape for every sign-in result, so `handleSignInButton` and
+    /// `restorePreviousSignIn` can never drift apart again.
+    ///
+    /// `identityToken` is the OIDC ID token — the JWT a backend can verify. Until 0.9.0 this
+    /// field carried the *access* token (an opaque `ya29.…`) while the ID token hid in
+    /// `authorizationCode`, which meant no backend could actually validate a sign-in.
+    private static func serialize(_ user: GIDGoogleUser, serverAuthCode: String?) -> [String: Any] {
+        return [
+            "user": user.userID ?? "",
+            "email": user.profile?.email ?? "",
+            "givenName": user.profile?.givenName ?? "",
+            "familyName": user.profile?.familyName ?? "",
+            "identityToken": user.idToken?.tokenString ?? "",
+            "accessToken": user.accessToken.tokenString,
+            "serverAuthCode": serverAuthCode ?? ""
+        ]
     }
     
     @objc func checkScope(_ call: CAPPluginCall) {

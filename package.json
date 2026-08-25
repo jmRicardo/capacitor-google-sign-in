@@ -1,6 +1,6 @@
 {
   "name": "capacitor-google-sign-in",
-  "version": "0.8.3",
+  "version": "0.9.0",
   "description": "Plugin para SignUp/SignIn de Google en Android y iOS",
   "main": "dist/plugin.cjs.js",
   "module": "dist/esm/index.js",

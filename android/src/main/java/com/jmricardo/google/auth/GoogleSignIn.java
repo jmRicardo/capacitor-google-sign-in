@@ -25,10 +25,18 @@ public class GoogleSignIn {
             user.put("email", data.getId());
             user.put("givenName", data.getGivenName());
             user.put("familyName", data.getFamilyName());
-            user.put("authorizationCode", data.getIdToken());
+            // The ID token goes here and nowhere else: it is the JWT a backend can verify.
+            // Up to 0.8.3 it was handed out as `authorizationCode` and `identityToken` was
+            // never set at all, so no backend could actually validate a sign-in.
+            user.put("identityToken", idToken);
+            // Credential Manager only ever returns the ID token: there is no access token
+            // and no authorization code to hand back.
+            user.put("accessToken", "");
+            user.put("serverAuthCode", "");
             response.put("response", user);
 
-            Log.i("GoogleIdTokenCredential", response.toString());
+            // Deliberately not logged: the response carries the ID token, and logcat is
+            // readable by anyone with adb on a debuggable build.
             return response;
         } catch (Exception e) {
             // This runs on the executor passed to getCredentialAsync(): anything thrown here
