@@ -45,6 +45,35 @@ Example of a scope format:
 
 const scopes = ['https://www.googleapis.com/auth/calendar']
 
+## Breaking change in 0.9.0
+
+`identityToken` now carries the **OIDC ID token** — the JWT signed by Google — on both
+platforms. That is the field, and the only field, a backend can verify.
+
+Up to 0.8.3 the response lied about what it held:
+
+| Field | Up to 0.8.3 | From 0.9.0 |
+|---|---|---|
+| `identityToken` | iOS: the *access* token (`ya29.…`, not a JWT). Android: never set. | The ID token, both platforms. |
+| `authorizationCode` | The ID token on both platforms. | **Removed.** |
+| `accessToken` | — | The OAuth access token. iOS only, empty on Android. |
+| `serverAuthCode` | iOS only, and missing from `restorePreviousSignIn`. | Same on both entry points, empty when not available. |
+
+The practical consequence of the old behaviour was that a backend reading `identityToken`
+had nothing verifiable to work with, so sign-in tended to be "validated" by trusting the
+`user` id straight off the request body. That is not authentication: `user` travels
+unsigned and anyone can type it. Read the subject off the verified `identityToken`.
+
+**Migrating:** wherever you sent `authorizationCode` to your backend as proof of identity,
+send `identityToken` instead. If your backend still accepts both while old app versions are
+out there, it can keep taking whichever of the two parses and validates as a JWT.
+
+Every field is now a plain `string`; anything the platform cannot provide comes back empty
+instead of `null`.
+
+Also in 0.9.0: neither platform logs the sign-in response any more. It contains the ID
+token, and logcat is readable by anyone with adb on a debuggable build.
+
 ## Install
 
 ```bash
@@ -132,8 +161,11 @@ requestScopes(options: { scopes: string[]; }) => Promise<{ value: boolean; }>
 
 #### SignInWithGoogleResponse
 
-| Prop           | Type                                                                                                                                                                                                           |
-| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **`response`** | <code>{ user: string \| null; email: string \| null; givenName: string \| null; familyName: string \| null; identityToken: string; authorizationCode: string \| null; serverAuthCode: string \| null; }</code> |
+Every field is a plain string. Fields the platform cannot provide come back empty
+instead of null, so callers only ever have one "missing" case to handle.
+
+| Prop           | Type                                                                                                                                                     |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **`response`** | <code>{ user: string; email: string; givenName: string; familyName: string; identityToken: string; accessToken: string; serverAuthCode: string; }</code> |
 
 </docgen-api>
