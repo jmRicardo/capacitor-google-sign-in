@@ -86,7 +86,7 @@ public class GoogleSignInPlugin extends Plugin {
                     @Override
                     public void onError(GetCredentialException e) {
                         signInInFlight.set(false);
-                        call.reject(e.getMessage() != null ? e.getMessage() : e.getType(), GoogleSignInErrors.codeFor(e));
+                        call.reject(e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName(), GoogleSignInErrors.codeFor(e));
                     }
                 }
             );
@@ -114,7 +114,7 @@ public class GoogleSignInPlugin extends Plugin {
                         e instanceof ClearCredentialProviderConfigurationException
                             ? GoogleSignInErrors.CONFIG_ERROR
                             : GoogleSignInErrors.UNKNOWN;
-                    call.reject(e.getMessage() != null ? e.getMessage() : e.getType(), code);
+                    call.reject(e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName(), code);
                 }
             }
         );
