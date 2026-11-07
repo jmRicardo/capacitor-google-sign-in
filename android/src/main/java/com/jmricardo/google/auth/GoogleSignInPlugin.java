@@ -1,172 +1,181 @@
 package com.jmricardo.google.auth;
 
-import static android.content.ContentValues.TAG;
-
-import static androidx.core.app.ActivityCompat.startIntentSenderForResult;
-
-import android.app.PendingIntent;
-import android.content.IntentSender;
-import android.os.CancellationSignal;
-import android.util.Log;
-
+import android.app.Activity;
+import androidx.core.content.ContextCompat;
+import androidx.credentials.ClearCredentialStateRequest;
 import androidx.credentials.Credential;
 import androidx.credentials.CredentialManager;
 import androidx.credentials.CredentialManagerCallback;
+import androidx.credentials.CredentialOption;
 import androidx.credentials.CustomCredential;
 import androidx.credentials.GetCredentialRequest;
 import androidx.credentials.GetCredentialResponse;
+import androidx.credentials.exceptions.ClearCredentialException;
+import androidx.credentials.exceptions.ClearCredentialProviderConfigurationException;
 import androidx.credentials.exceptions.GetCredentialException;
-
-import com.getcapacitor.JSArray;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
-import com.google.android.gms.auth.api.identity.AuthorizationRequest;
-import com.google.android.gms.auth.api.identity.AuthorizationResult;
-import com.google.android.gms.auth.api.identity.Identity;
-import com.google.android.gms.common.api.Scope;
+import com.google.android.libraries.identity.googleid.GetGoogleIdOption;
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption;
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential;
-
-import org.json.JSONException;
-
-import java.util.Arrays;
-import java.util.List;
-import java.util.concurrent.Executors;
-import java.util.stream.Collectors;
+import java.util.concurrent.Executor;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @CapacitorPlugin(name = "GoogleSignIn")
 public class GoogleSignInPlugin extends Plugin {
 
-    private GetSignInWithGoogleOption signInWithGoogleOption;
     private CredentialManager credentialManager;
-    private final GoogleSignIn googleSignIn = new GoogleSignIn();
-    private static final int REQUEST_AUTHORIZE = 1001;
+    private String serverClientId;
+    // Callbacks only build a JSObject: the main thread is enough and nothing leaks per call.
+    private Executor callbackExecutor;
+    private final AtomicBoolean signInInFlight = new AtomicBoolean(false);
+
+    @Override
+    public void load() {
+        credentialManager = CredentialManager.create(getContext());
+        serverClientId = getConfig().getString("AndroidServerClientId");
+        callbackExecutor = ContextCompat.getMainExecutor(getContext());
+    }
 
     @PluginMethod
-    public void handleSignInButton(PluginCall call) {
-        var request = new GetCredentialRequest.Builder()
-                .addCredentialOption(signInWithGoogleOption)
-                .build();
+    public void signIn(PluginCall call) {
+        String nonce = call.getString("nonce");
+        if (isEmpty(nonce)) {
+            call.reject("signIn needs a nonce issued by your backend.", GoogleSignInErrors.CONFIG_ERROR);
+            return;
+        }
+        if (isEmpty(serverClientId)) {
+            call.reject("Set plugins.GoogleSignIn.AndroidServerClientId in the Capacitor config.", GoogleSignInErrors.CONFIG_ERROR);
+            return;
+        }
+        Activity activity = getActivity();
+        if (activity == null) {
+            call.reject("There is no activity to show the sign-in from.", GoogleSignInErrors.UNKNOWN);
+            return;
+        }
 
-        CancellationSignal cancellationSignal = new CancellationSignal();
-        cancellationSignal.setOnCancelListener(() -> {
-            Log.d(TAG, "Credential request was cancelled");
-            call.reject("Credential request was cancelled");
-        });
+        CredentialOption option;
+        try {
+            option = buildOption(call, nonce);
+        } catch (IllegalArgumentException e) {
+            call.reject(e.getMessage(), GoogleSignInErrors.CONFIG_ERROR);
+            return;
+        }
 
-        credentialManager.getCredentialAsync(
-                this.getContext(),
+        if (!signInInFlight.compareAndSet(false, true)) {
+            call.reject("Another sign-in is already in progress.", GoogleSignInErrors.UNKNOWN);
+            return;
+        }
+        try {
+            GetCredentialRequest request = new GetCredentialRequest.Builder().addCredentialOption(option).build();
+            credentialManager.getCredentialAsync(
+                activity,
                 request,
-                cancellationSignal,
-                Executors.newSingleThreadExecutor(),
+                null,
+                callbackExecutor,
                 new CredentialManagerCallback<>() {
                     @Override
-                    public void onResult(GetCredentialResponse result) {
-                        var data = handleSignIn(result);
-                        if (data!=null) {
-                            var parsed = googleSignIn.parseCredentialData(data);
-                            if (parsed!=null) {
-                                call.resolve(parsed);
-                            } else {
-                                call.reject("Cannot parse credential data");
-                            }
-                        } else {
-                            call.reject("Unexpected type of credential");
-                        }
+                    public void onResult(GetCredentialResponse response) {
+                        signInInFlight.set(false);
+                        resolveCredential(call, response.getCredential());
                     }
 
                     @Override
                     public void onError(GetCredentialException e) {
-                        call.reject("Error! " + e);
+                        signInInFlight.set(false);
+                        call.reject(e.getMessage() != null ? e.getMessage() : e.getType(), GoogleSignInErrors.codeFor(e));
                     }
-                });
-    }
-
-    @PluginMethod
-    public void checkScopes(PluginCall call) {
-        scopes(call, false);
-    }
-
-    @PluginMethod
-    public void requestScopes(PluginCall call) {
-        scopes(call, true);
-    }
-
-    private void scopes(PluginCall call, boolean askForScopes) {
-        JSArray jsScopes = call.getArray("scopes", new JSArray());
-        String[] scopes = new String[jsScopes.length()];
-
-        for (int i = 0; i < jsScopes.length(); i++) {
-            try {
-                scopes[i] = jsScopes.getString(i);
-            } catch (JSONException e) {
-                call.reject("Error parsing scopes", e);
-                return;
-            }
+                }
+            );
+        } catch (RuntimeException e) {
+            signInInFlight.set(false);
+            call.reject("Could not start the sign-in: " + e.getMessage(), GoogleSignInErrors.UNKNOWN);
         }
-        List<Scope> requestedScopes = Arrays.stream(scopes).map(Scope::new).collect(Collectors.toList());
-        var authorizationRequest = AuthorizationRequest.builder().setRequestedScopes(requestedScopes).build();
-        Identity.getAuthorizationClient(this.getActivity())
-                .authorize(authorizationRequest)
-                .addOnSuccessListener(
-                        authorizationResult -> {
-                            JSObject response = new JSObject();
-                            if (authorizationResult.hasResolution()) {
-                                if (askForScopes) requestScopes(authorizationResult);
-                                else {
-                                    response.put("value", false);
-                                    call.reject("Access not granted", response);
-                                }
-                            } else {
-                                response.put("value", true);
-                                call.resolve(response);
-                            }
-                        })
-                .addOnFailureListener(e -> Log.e(TAG, "Failed to authorize", e));
     }
 
-    private void requestScopes(AuthorizationResult authorizationResult) {
-        // Access needs to be granted by the user
-        PendingIntent pendingIntent = authorizationResult.getPendingIntent();
+    @PluginMethod
+    public void signOut(PluginCall call) {
+        credentialManager.clearCredentialStateAsync(
+            new ClearCredentialStateRequest(),
+            null,
+            callbackExecutor,
+            new CredentialManagerCallback<>() {
+                @Override
+                public void onResult(Void result) {
+                    call.resolve();
+                }
+
+                @Override
+                public void onError(ClearCredentialException e) {
+                    String code =
+                        e instanceof ClearCredentialProviderConfigurationException
+                            ? GoogleSignInErrors.CONFIG_ERROR
+                            : GoogleSignInErrors.UNKNOWN;
+                    call.reject(e.getMessage() != null ? e.getMessage() : e.getType(), code);
+                }
+            }
+        );
+    }
+
+    private CredentialOption buildOption(PluginCall call, String nonce) {
+        String hostedDomain = call.getString("hostedDomain");
+        JSObject android = call.getObject("android", new JSObject());
+        String flow = android.getString("flow", "button");
+
+        if ("bottomSheet".equals(flow)) {
+            GetGoogleIdOption.Builder builder = new GetGoogleIdOption.Builder()
+                .setServerClientId(serverClientId)
+                .setNonce(nonce)
+                .setFilterByAuthorizedAccounts(Boolean.TRUE.equals(android.getBoolean("filterByAuthorizedAccounts", false)))
+                .setAutoSelectEnabled(Boolean.TRUE.equals(android.getBoolean("autoSelect", false)));
+            if (!isEmpty(hostedDomain)) {
+                builder.setHostedDomainFilter(hostedDomain);
+            }
+            return builder.build();
+        }
+        if (!"button".equals(flow)) {
+            throw new IllegalArgumentException("android.flow must be 'button' or 'bottomSheet', not '" + flow + "'.");
+        }
+        GetSignInWithGoogleOption.Builder builder = new GetSignInWithGoogleOption.Builder(serverClientId).setNonce(nonce);
+        if (!isEmpty(hostedDomain)) {
+            builder.setHostedDomainFilter(hostedDomain);
+        }
+        return builder.build();
+    }
+
+    private void resolveCredential(PluginCall call, Credential credential) {
+        if (
+            !(credential instanceof CustomCredential custom) ||
+            !GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL.equals(custom.getType())
+        ) {
+            call.reject("Credential Manager returned an unexpected credential type.", GoogleSignInErrors.UNKNOWN);
+            return;
+        }
+        GoogleIdTokenCredential google;
         try {
-            startIntentSenderForResult(getActivity(), pendingIntent.getIntentSender(),
-                    REQUEST_AUTHORIZE, null, 0, 0, 0, null);
-        } catch (IntentSender.SendIntentException e) {
-            Log.e(TAG, "Couldn't start Authorization UI: " + e.getLocalizedMessage());
+            google = GoogleIdTokenCredential.createFrom(custom.getData());
+        } catch (RuntimeException e) {
+            call.reject("Could not read the Google credential.", GoogleSignInErrors.UNKNOWN);
+            return;
         }
+        // Deliberately not logged: it carries the ID token, and logcat is readable over adb.
+        JSObject result = new JSObject();
+        result.put("idToken", google.getIdToken());
+        result.put("email", orEmpty(google.getEmail()));
+        result.put("givenName", orEmpty(google.getGivenName()));
+        result.put("familyName", orEmpty(google.getFamilyName()));
+        result.put("serverAuthCode", "");
+        call.resolve(result);
     }
 
-
-    @Override
-    public void load() {
-        var config = this.getConfig();
-        var serverClientId = config.getString("AndroidServerClientId");
-        if(serverClientId != null)
-        {
-            credentialManager = CredentialManager.create(this.getContext());
-            signInWithGoogleOption = new GetSignInWithGoogleOption.Builder(serverClientId)
-                    .build();
-        }
+    private static boolean isEmpty(String value) {
+        return value == null || value.isEmpty();
     }
 
-    public GoogleIdTokenCredential handleSignIn(GetCredentialResponse result) {
-        Credential credential = result.getCredential();
-        if (credential instanceof CustomCredential customCredential) {
-            if (GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL.equals(customCredential.getType())) {
-                return GoogleIdTokenCredential.createFrom(customCredential.getData());
-            } else {
-                Log.e(TAG, "Unexpected type of credential");
-            }
-        } else {
-            Log.e(TAG, "Unexpected type of credential");
-        }
-        return null;
+    private static String orEmpty(String value) {
+        return value == null ? "" : value;
     }
-
-
 }
-
-

@@ -1,29 +1,18 @@
 import { WebPlugin } from '@capacitor/core';
 
-import type {GoogleSignInPlugin, SignInWithGoogleResponse} from './definitions';
+import type { GoogleSignInPlugin, SignInResult } from './definitions';
 
+/**
+ * Not implemented on purpose: on the web, use Google Identity Services directly (the official
+ * button or One Tap), which takes the same `nonce`. Google blocks OAuth inside embedded
+ * WebViews, so GIS cannot replace the native flow in the app either.
+ */
 export class GoogleSignInWeb extends WebPlugin implements GoogleSignInPlugin {
-
-  // @ts-ignore
-  async handleSignInButton(): Promise<SignInWithGoogleResponse> {
-    this.unimplemented('Not implemented on web.')
-  }
-
-  async restorePreviousSignIn(): Promise<void> {
-    this.unimplemented('Not implemented on web.')
+  async signIn(): Promise<SignInResult> {
+    throw this.unimplemented('Not available on the web: use Google Identity Services directly.');
   }
 
   async signOut(): Promise<void> {
-    this.unimplemented('Not implemented on web.')
-  }
-
-  // @ts-ignore
-  checkScopes(options: { scopes: string[] }): Promise<{ value: boolean }> {
-    this.unimplemented('Not implemented on web.')
-  }
-
-  // @ts-ignore
-  requestScopes(options: { scopes: string[] }): Promise<{ value: boolean }> {
-    this.unimplemented('Not implemented on web.')
+    throw this.unimplemented('Not available on the web: use google.accounts.id.disableAutoSelect().');
   }
 }
