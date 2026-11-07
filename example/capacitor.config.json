@@ -1,11 +1,8 @@
 {
-  "appId": "com.example.plugin",
-  "appName": "example",
-  "bundledWebRuntime": false,
+  "appId": "com.jmricardo.googlesignin.example",
+  "appName": "Google Sign-In",
   "webDir": "dist",
   "plugins": {
-    "SplashScreen": {
-      "launchShowDuration": 0
-    }
+    "GoogleSignIn": {}
   }
 }

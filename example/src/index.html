@@ -1,32 +1,49 @@
-<!DOCTYPE html>
-<html lang="en" dir="ltr">
+<!doctype html>
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>Awesome Capacitor App</title>
-    <meta
-      name="viewport"
-      content="viewport-fit=cover, width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no"
-    />
-    <meta name="format-detection" content="telephone=no" />
-    <meta name="msapplication-tap-highlight" content="no" />
-
-    <script
-      type="module"
-      src="https://unpkg.com/@ionic/pwa-elements@latest/dist/ionicpwaelements/ionicpwaelements.esm.js"
-    ></script>
-    <script
-      nomodule
-      src="https://unpkg.com/@ionic/pwa-elements@latest/dist/ionicpwaelements/ionicpwaelements.js"
-    ></script>
-
-    <link rel="icon" type="image/x-icon" href="./assets/icon/favicon.ico" />
-    <link rel="manifest" href="./manifest.json" />
-    <link rel="stylesheet" href="./css/style.css" />
-    <meta name="theme-color" content="#31d53d" />
+    <title>Google Sign-In example</title>
+    <meta name="viewport" content="viewport-fit=cover, width=device-width, initial-scale=1.0" />
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        margin: 0;
+        padding: calc(env(safe-area-inset-top) + 16px) 16px 16px;
+      }
+      button {
+        display: block;
+        width: 100%;
+        margin: 8px 0;
+        padding: 12px;
+        font-size: 16px;
+      }
+      label {
+        display: block;
+        margin: 8px 0;
+      }
+      input[type='text'] {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 8px;
+        font-size: 16px;
+      }
+      pre {
+        white-space: pre-wrap;
+        word-break: break-all;
+        background: #f2f2f2;
+        padding: 12px;
+      }
+    </style>
   </head>
   <body>
-    <capacitor-welcome></capacitor-welcome>
-
-    <script src="./js/capacitor-welcome.js" type="module"></script>
+    <h1>Google Sign-In</h1>
+    <label>Hosted domain (optional) <input id="hostedDomain" type="text" autocapitalize="off" /></label>
+    <label>Hint, iOS only (optional) <input id="hint" type="text" autocapitalize="off" /></label>
+    <button id="signIn">Sign in</button>
+    <button id="bottomSheet">Sign in with the bottom sheet (Android)</button>
+    <button id="noNonce">Sign in without a nonce</button>
+    <button id="signOut">Sign out</button>
+    <pre id="output">Ready.</pre>
+    <script src="./js/app.js" type="module"></script>
   </body>
 </html>
